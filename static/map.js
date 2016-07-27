@@ -14,17 +14,17 @@ var $selectExcludeIV = $('#exclude-iv-pokemon');
 $selectExcludeIV.select2({
         placeholder: 'Select a %',
         data: [
-            {id: 0, text: '0%'},
-            {id: 10, text: '10%'},
-            {id: 20, text: '20%'},
-            {id: 30, text: '30%'},
-            {id: 40, text: '40%'},
-            {id: 50, text: '50%'},
-            {id: 60, text: '60%'},
-            {id: 70, text: '70%'},
-            {id: 80, text: '80%'},
-            {id: 90, text: '90%'},
-            {id: 99, text: '99%'}
+            {id: 1, text: '< 1%'},
+            {id: 10, text: '< 10%'},
+            {id: 20, text: '< 20%'},
+            {id: 30, text: '< 30%'},
+            {id: 40, text: '< 40%'},
+            {id: 50, text: '< 50%'},
+            {id: 60, text: '< 60%'},
+            {id: 70, text: '< 70%'},
+            {id: 80, text: '< 80%'},
+            {id: 90, text: '< 90%'},
+            {id: 99, text: '< 99%'}
         ]
     });
 var $selectNotify = $("#notify-pokemon");
@@ -166,8 +166,51 @@ function initSidebar() {
 
 var pad = function (number) { return number <= 99 ? ("0" + number).slice(-2) : number; }
 
+function pokemonLabel(pokemon) {
+    var disappear_date = new Date(pokemon.disappear_time);
+    var disappear_string = disappear_date.toLocaleTimeString('en-US', {
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+    var score = calculateIV(pokemon);
+    var contentString = `
+    <div class="pokemon">
+        <div class="cp">
+            <span class="text uppercase small">CP</span> ${pokemon.cp}
+        </div>
+        <div class="image">
+            <img src="/static/icons-large/${pokemon.pokemon_id}.png" />
+        </div>
+        <div class="details">
+            <div class="name">${pokemon.pokemon_name} (${score}%)</div>
+            <div class="stats">
+                <div class="attack">
+                    <div class="value">${pokemon.attack}</div>
+                    <div class="attribute">Attack</div>
+                </div>
+                <div class="defense">
+                    <div class="value">${pokemon.defense}</div>
+                    <div class="attribute">Defense</div>
+                </div>
+                <div class="stamina">
+                    <div class="value">${pokemon.stamina}/${pokemon.stamina_max}</div>
+                    <div class="attribute">Stamina/Max</div>
+                </div>
+            </div>
+            <div class="timer">
+                Disappears at ${disappear_string}
+                <span class='label-countdown' disappears-at='${pokemon.disappear_time}'>(00m00s)</span>
+            </div>
+            <div class="coordinates">
+                <a href="javascript:void(0)"
+                    onclick="copyTextToClipboard('${pokemon.latitude},${pokemon.longitude}');">Copy Coordinates</a>
+            </div>
+        </div>
+    </div>
+    `;
+    return contentString;
+}
 
-function pokemonLabel(item) {
+function pokemonLabelOld(item) {
     disappear_date = new Date(item.disappear_time)
 
     var contentstring = `
@@ -422,7 +465,7 @@ function clearStaleMarkers() {
 };
 
 function calculateIV(pokemon) {
-    return ((pokemon.attack + pokemon.defense + pokemon.stamina) / (30 + pokemon.stamina_max)) * 100;
+    return Math.floor(((pokemon.attack + pokemon.defense + pokemon.stamina) / 45) * 100);
 }
 
 function updateMap() {
@@ -609,4 +652,27 @@ function sendNotification(title, text, icon) {
             window.open(window.location.href);
         };
     }
+}
+
+function copyTextToClipboard(text) {
+  var textArea = document.createElement("textarea");
+  textArea.style.position = 'fixed';
+  textArea.style.top = 0;
+  textArea.style.left = 0;
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  textArea.style.padding = 0;
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  textArea.style.background = 'transparent';
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand('copy');
+  } catch (err) {
+    console.error('Unable to copy coordinates.');
+  }
+  document.body.removeChild(textArea);
 }
