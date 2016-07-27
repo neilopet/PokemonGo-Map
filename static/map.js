@@ -10,6 +10,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 var $selectExclude = $("#exclude-pokemon");
+var $selectExcludeIV = $('#exclude-iv-pokemon');
+$selectExcludeIV.select2({
+        placeholder: 'Select a %',
+        data: [
+            {id: 0, text: '0%'},
+            {id: 10, text: '10%'},
+            {id: 20, text: '20%'},
+            {id: 30, text: '30%'},
+            {id: 40, text: '40%'},
+            {id: 50, text: '50%'},
+            {id: 60, text: '60%'},
+            {id: 70, text: '70%'},
+            {id: 80, text: '80%'},
+            {id: 90, text: '90%'},
+            {id: 99, text: '99%'}
+        ]
+    });
 var $selectNotify = $("#notify-pokemon");
 
 var idToPokemon = {};
@@ -53,6 +70,10 @@ $selectExclude.on("change", function (e) {
 $selectNotify.on("change", function (e) {
     notifiedPokemon = $selectNotify.val().map(Number);
     localStorage.remember_select_notify = JSON.stringify(notifiedPokemon);
+});
+
+$selectExcludeIV.on('change', function(e) {
+    clearStaleMarkers();
 });
 
 var map;
@@ -146,23 +167,25 @@ function initSidebar() {
 var pad = function (number) { return number <= 99 ? ("0" + number).slice(-2) : number; }
 
 
-function pokemonLabel(name, disappear_time, id, latitude, longitude) {
-    disappear_date = new Date(disappear_time)
+function pokemonLabel(item) {
+    disappear_date = new Date(item.disappear_time)
 
     var contentstring = `
         <div>
-            <b>${name}</b>
+            <b>${item.pokemon_name} (${item.attack}/${item.defense}/${item.stamina})</b>
             <span> - </span>
             <small>
-                <a href='http://www.pokemon.com/us/pokedex/${id}' target='_blank' title='View in Pokedex'>#${id}</a>
+                <a href='http://www.pokemon.com/us/pokedex/${item.pokemon_id}' target='_blank' title='View in Pokedex'>#${item.pokemon_id}</a>
             </small>
         </div>
         <div>
             Disappears at ${pad(disappear_date.getHours())}:${pad(disappear_date.getMinutes())}:${pad(disappear_date.getSeconds())}
-            <span class='label-countdown' disappears-at='${disappear_time}'>(00m00s)</span></div>
+            <span class='label-countdown' disappears-at='${item.disappear_time}'>(00m00s)</span></div>
         <div>
-            <a href='https://www.google.com/maps/dir/Current+Location/${latitude},${longitude}'
+            <a href='https://www.google.com/maps/dir/Current+Location/${item.latitude},${item.longitude}'
                     target='_blank' title='View in Maps'>Get directions</a>
+            <br/>
+            <input type='text' readonly='readonly' value='${item.latitude},${item.longitude}' />
         </div>`;
     return contentstring;
 }
@@ -268,7 +291,7 @@ function setupPokemonMarker(item) {
     });
 
     marker.infoWindow = new google.maps.InfoWindow({
-        content: pokemonLabel(item.pokemon_name, item.disappear_time, item.pokemon_id, item.latitude, item.longitude)
+        content: pokemonLabel(item)
     });
 
     if (notifiedPokemon.indexOf(item.pokemon_id) > -1) {
@@ -379,8 +402,11 @@ function addListeners(marker) {
 function clearStaleMarkers() {
     $.each(map_pokemons, function(key, value) {
 
+        var hideByIV = parseInt($('#exclude-iv-pokemon').val().replace(/[^0-9]/, '')) || 100;
+
         if (map_pokemons[key]['disappear_time'] < new Date().getTime() ||
-                excludedPokemon.indexOf(map_pokemons[key]['pokemon_id']) >= 0) {
+                excludedPokemon.indexOf(map_pokemons[key]['pokemon_id']) >= 0 ||
+                calculateIV(map_pokemons[key]) < hideByIV) {
             map_pokemons[key].marker.setMap(null);
             delete map_pokemons[key];
         }
@@ -394,6 +420,10 @@ function clearStaleMarkers() {
         }
     });
 };
+
+function calculateIV(pokemon) {
+    return ((pokemon.attack + pokemon.defense + pokemon.stamina) / (30 + pokemon.stamina_max)) * 100;
+}
 
 function updateMap() {
 

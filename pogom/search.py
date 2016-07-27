@@ -4,6 +4,7 @@
 import logging
 import time
 import math
+import traceback
 
 from threading import Thread, Semaphore
 
@@ -112,7 +113,7 @@ def search_thread(args):
         if response_dict:
             try:
                 sem.acquire()
-                parse_map(response_dict, i, step, step_location)
+                parse_map(response_dict, i, step, step_location, api)
             except KeyError:
                 log.error('Scan step {:d} failed. Response dictionary key error.'.format(step))
                 failed_consecutive += 1
@@ -192,5 +193,6 @@ def search_loop(args):
     # This seems appropriate
     except Exception as e:
         log.info('Crashed, waiting {:d} seconds before restarting search.'.format(args.scan_delay))
+        print traceback.format_exc()
         time.sleep(args.scan_delay)
         search_loop(args)

@@ -63,6 +63,14 @@ def get_args():
     if (args.settings):
         args = parse_config(args) 
     else:
+        args.username = os.environ['USERNAME']
+        args.password = os.environ['PASSWORD']
+        args.location = os.environ['LOCATION']
+        args.gmaps_key = os.environ['GMAPS_KEY']
+        args.auth_service = os.environ['AUTH_SERVICE']
+        args.step_limit = int(os.environ['STEP_COUNT'])
+        args.num_threads = int(os.environ['THREADS'])
+
         if (args.username is None or args.location is None or args.step_limit is None):
             parser.print_usage()
             print sys.argv[0] + ': error: arguments -u/--username, -l/--location, -st/--step-limit are required'

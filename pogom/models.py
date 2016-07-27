@@ -7,7 +7,6 @@ from peewee import Model, SqliteDatabase, InsertQuery, IntegerField,\
 from datetime import datetime
 from datetime import timedelta
 from base64 import b64encode
-
 from .utils import get_pokemon_name, get_args
 from .transform import transform_from_wgs_to_gcj
 from .customLog import printPokemon
@@ -40,6 +39,13 @@ class Pokemon(BaseModel):
     latitude = FloatField()
     longitude = FloatField()
     disappear_time = DateTimeField()
+    cp = IntegerField()
+    height = FloatField()
+    weight = FloatField()
+    attack = IntegerField()
+    defense = IntegerField()
+    stamina = IntegerField()
+    stamina_max = IntegerField()
 
     @classmethod
     def get_active(cls):
@@ -103,7 +109,19 @@ class ScannedLocation(BaseModel):
 
         return scans
 
-def parse_map(map_dict, iteration_num, step, step_location):
+def send_encounter_request(api, encounter_id, spawn_point_id, player_latitude, player_longitude):
+    try:
+        api.encounter(encounter_id=encounter_id,
+                    spawn_point_id=spawn_point_id,
+                    player_latitude=player_latitude,
+                    player_longitude=player_longitude)
+        result = api.call()
+        return result
+    except Exception as e:
+        log.warn("Uncaught exception when encountering pokemon " + str(e))
+        return False
+
+def parse_map(map_dict, iteration_num, step, step_location, api):
     pokemons = {}
     pokestops = {}
     gyms = {}
@@ -116,13 +134,22 @@ def parse_map(map_dict, iteration_num, step, step_location):
                 (p['last_modified_timestamp_ms'] +
                  p['time_till_hidden_ms']) / 1000.0)
             printPokemon(p['pokemon_data']['pokemon_id'],p['latitude'],p['longitude'],d_t)
+            response = send_encounter_request(api, p['encounter_id'], p['spawnpoint_id'], p['latitude'], p['longitude'])
+            pokemon_data = response['responses']['ENCOUNTER']['wild_pokemon']['pokemon_data'];
             pokemons[p['encounter_id']] = {
                 'encounter_id': b64encode(str(p['encounter_id'])),
                 'spawnpoint_id': p['spawnpoint_id'],
                 'pokemon_id': p['pokemon_data']['pokemon_id'],
                 'latitude': p['latitude'],
                 'longitude': p['longitude'],
-                'disappear_time': d_t
+                'disappear_time': d_t,
+                'cp': pokemon_data['cp'],
+                'height': pokemon_data['height_m'],
+                'weight': pokemon_data['weight_kg'],
+                'attack': pokemon_data['individual_attack'],
+                'defense': pokemon_data['individual_defense'],
+                'stamina': pokemon_data['stamina'],
+                'stamina_max': pokemon_data['stamina_max']
             }
 
         if iteration_num > 0 or step > 50:
