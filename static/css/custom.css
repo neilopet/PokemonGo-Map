@@ -1,0 +1,61 @@
+.pokemon {
+}
+
+.pokemon .image {
+    width: 100%;
+}
+
+.pokemon .image img {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.cp {
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.text.small {
+    font-size: 1.1rem;
+    /* do nothing */
+}
+
+.text.uppercase {
+    text-transform: uppercase;
+}
+
+.pokemon .name {
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.3rem;
+}
+
+.stats {
+    width: 100%;
+    clear: both;
+    text-align: center;
+}
+
+.stats .attack,
+.stats .defense,
+.stats .stamina {
+    width: 32%;
+    float: left;
+    display: block;
+    font-size: 0.7rem;
+}
+
+.stats .value {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.timer {
+    clear: both;
+    text-align: center;
+}
+
+.coordinates {
+    text-align: center;
+}
