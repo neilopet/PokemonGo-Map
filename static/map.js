@@ -56,6 +56,9 @@ $.getJSON("static/locales/pokemon." + document.documentElement.lang + ".json").d
     if (localStorage['remember_select_notify']) {
         $selectNotify.val(JSON.parse(localStorage.remember_select_notify)).trigger("change");
     }
+    if (localStorage['hideByIV']) {
+        $selectExcludeIV.val(localStorage.hideByIV).trigger('change');
+    }
 });
 
 var excludedPokemon = [];
@@ -75,6 +78,7 @@ $selectNotify.on("change", function (e) {
 
 $selectExcludeIV.on('change', function(e) {
     clearStaleMarkers();
+    localStorage.hideByIV = $(this).val();
 });
 
 var map;
@@ -86,8 +90,6 @@ var pGoStyle=[{"featureType":"landscape.man_made","elementType":"geometry.fill",
 var selectedStyle = 'light';
 
 function initMap() {
-
-
     map = new google.maps.Map(document.getElementById('map'), {
         center: {
             lat: center_lat,
@@ -347,11 +349,16 @@ function setupPokemonMarker(item) {
         disableAutoPan: true
     });
 
-    if (notifiedPokemon.indexOf(item.pokemon_id) > -1) {
+    var hideByIV = parseInt($('#exclude-iv-pokemon').val().replace(/[^0-9]/, '')) || 100;
+    var iv = calculateIV(item);
+    if (notifiedPokemon.indexOf(item.pokemon_id) > -1 &&
+        iv > hideByIV) {
         if(localStorage.playSound === 'true'){
           audio.play();
         }
-        sendNotification('A wild ' + item.pokemon_name + ' appeared!', 'Click to load map', 'static/icons/' + item.pokemon_id + '.png')
+        sendNotification(marker, item.pokemon_name + ' - ' + iv + '%',
+            'Attack: ' + item.attack + '; Defense: ' + item.defense + '; Stamina: ' + item.stamina + '',
+            'static/icons-large/' + item.pokemon_id + '.png');
     }
 
     addListeners(marker);
@@ -481,6 +488,7 @@ function updateMap() {
     localStorage.showGyms = localStorage.showGyms || true;
     localStorage.showPokestops = localStorage.showPokestops || false;
     localStorage.showScanned = localStorage.showScanned || false;
+    localStorage.hideByIV = localStorage.hideByIV || 1;
 
     $.ajax({
         url: "raw_data",
@@ -645,7 +653,7 @@ var updateLabelDiffTime = function() {
 
 window.setInterval(updateLabelDiffTime, 1000);
 
-function sendNotification(title, text, icon) {
+function sendNotification(marker, title, text, icon) {
     if (Notification.permission !== "granted") {
         Notification.requestPermission();
     } else {
@@ -656,7 +664,12 @@ function sendNotification(title, text, icon) {
         });
 
         notification.onclick = function () {
-            window.open(window.location.href);
+            if (prev_infowindow) {
+                prev_infowindow.close();
+            }
+            marker.infoWindow.open(map, marker);
+            map.setCenter(marker.getPosition());
+            prev_infowindow = marker.infoWindow;
         };
     }
 }
