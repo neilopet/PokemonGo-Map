@@ -415,6 +415,12 @@ function addListeners(marker) {
         updateLabelDiffTime();
         marker.persist = true;
         prev_infowindow = marker.infoWindow;
+
+        $($($('.gm-style-iw')
+                .parent()
+                .children()[0])
+                    .children()[3])
+                    .css('background', 'rgba(255,255,255,0.75)');
     });
 
     google.maps.event.addListener(marker.infoWindow, 'closeclick', function() {
