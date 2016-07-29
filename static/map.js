@@ -221,52 +221,22 @@ function pokemonLabel(pokemon) {
     return contentString;
 }
 
-function pokemonLabelOld(item) {
-    disappear_date = new Date(item.disappear_time)
-
-    var contentstring = `
-        <div>
-            <b>${item.pokemon_name} (${item.attack}/${item.defense}/${item.stamina})</b>
-            <span> - </span>
-            <small>
-                <a href='http://www.pokemon.com/us/pokedex/${item.pokemon_id}' target='_blank' title='View in Pokedex'>#${item.pokemon_id}</a>
-            </small>
-        </div>
-        <div>
-            Disappears at ${pad(disappear_date.getHours())}:${pad(disappear_date.getMinutes())}:${pad(disappear_date.getSeconds())}
-            <span class='label-countdown' disappears-at='${item.disappear_time}'>(00m00s)</span></div>
-        <div>
-            <a href='https://www.google.com/maps/dir/Current+Location/${item.latitude},${item.longitude}'
-                    target='_blank' title='View in Maps'>Get directions</a>
-            <br/>
-            <input type='text' readonly='readonly' value='${item.latitude},${item.longitude}' />
-        </div>`;
-    return contentstring;
-}
-
-function gymLabel(team_name, team_id, gym_points) {
+function gymLabel(team_name, item) {
     var gym_color = ["0, 0, 0, .4", "74, 138, 202, .6", "240, 68, 58, .6", "254, 217, 40, .6"];
-    var str;
-    if (team_id == 0) {
-        str = `<div><center>
-            <div>
-                <b style='color:rgba(${gym_color[team_id]})'>${team_name}</b><br>
-                <img height='70px' style='padding: 5px;' src='static/forts/${team_name}_large.png'>
-            </div>
-            </center></div>`;
-    } else {
-        str = `
-            <div><center>
+    var str = `<div><center>
             <div style='padding-bottom: 2px'>Gym owned by:</div>
             <div>
-                <b style='color:rgba(${gym_color[team_id]})'>Team ${team_name}</b><br>
+                <b style='color:rgba(${gym_color[item.team_id]})'>Team ${team_name}</b><br>
                 <img height='70px' style='padding: 5px;' src='static/forts/${team_name}_large.png'>
-            </div>
-            <div>Prestige: ${gym_points}</div>
-            </center></div>`;
+            </div>`;
+
+    if (item.team_id != 0) {
+        str += `<div>Prestige: ${item.gym_points}</div>`;
     }
 
-    return str;
+    return str + `<a href="javascript:void(0)"
+                    onclick="copyTextToClipboard('${item.latitude},${item.longitude}');">Copy Coordinates</a>
+                    </center></div>`;
 }
 
 function pokestopLabel(lured, last_modified, active_pokemon_id, latitude, longitude) {
@@ -537,7 +507,7 @@ function updateMap() {
                     map_gyms[item.gym_id].marker = setupGymMarker(item);
                 } else { // if it hasn't changed generate new label only (in case prestige has changed)
                     map_gyms[item.gym_id].marker.infoWindow = new google.maps.InfoWindow({
-                        content: gymLabel(gym_types[item.team_id], item.team_id, item.gym_points)
+                        content: gymLabel(gym_types[item.team_id], item)
                     });
                 }
             }
