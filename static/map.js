@@ -351,8 +351,7 @@ function setupPokemonMarker(item) {
 
     var hideByIV = parseInt($('#exclude-iv-pokemon').val().replace(/[^0-9]/, '')) || 100;
     var iv = calculateIV(item);
-    if (notifiedPokemon.indexOf(item.pokemon_id) > -1 &&
-        iv > hideByIV) {
+    if (notifiedPokemon.indexOf(item.pokemon_id) > -1 || iv > 91) {
         if(localStorage.playSound === 'true'){
           audio.play();
         }
