@@ -182,12 +182,12 @@ def search_loop(args):
     i = 0
     try:
         while True:
-            log.info("Map iteration: {}".format(i))
-            search(args, i)
-            log.info("Scanning complete.")
             if args.scan_delay > 1:
                 log.info('Waiting {:d} seconds before beginning new scan.'.format(args.scan_delay))
                 time.sleep(args.scan_delay)
+            log.info("Map iteration: {}".format(i))
+            search(args, i)
+            log.info("Scanning complete.")
             i += 1
 
     # This seems appropriate
